@@ -15,7 +15,7 @@ class PlayerEntity : PanacheEntityBase() {
     @Column(nullable = false)
     lateinit var position: String
 
-    @Column
+    @Column(name = "date_of_birth")
     var dateOfBirth: String? = null
 
     @Column
@@ -32,16 +32,16 @@ class PlayerEntity : PanacheEntityBase() {
     @Column
     var foot: String? = null
 
-    @Column
+    @Column(name = "joined_on")
     var joinedOn: String? = null
 
-    @Column
+    @Column(name = "signed_from")
     var signedFrom: String? = null
 
     @Column
     var contract: String? = null
 
-    @Column
+    @Column(name = "market_value")
     var marketValue: Int? = null
 
     @Column

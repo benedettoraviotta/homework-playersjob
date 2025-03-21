@@ -15,10 +15,10 @@ class JobStateEntity() : PanacheEntityBase() {
     @Column(nullable = false)
     lateinit var status: String
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "start_time")
     val startTime: LocalDateTime = LocalDateTime.now()
 
-    @Column
+    @Column(name = "end_time")
     var endTime: LocalDateTime? = null
 
     constructor(status: String) : this() {
