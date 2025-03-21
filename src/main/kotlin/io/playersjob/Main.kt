@@ -19,8 +19,12 @@ class Main : QuarkusApplication {
 
     @Transactional
     override fun run(vararg args: String?): Int {
-        fetchJobRunner.fetchAndSavePlayers(clubId.toInt())
-        Quarkus.waitForExit()
-        return 0
+        try {
+            fetchJobRunner.fetchAndSavePlayers(clubId.toInt())
+            return 0
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return 1
+        }
     }
 }
