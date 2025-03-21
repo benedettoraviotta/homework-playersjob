@@ -29,7 +29,6 @@ class JpaJobStateRepository : JobStateRepository, PanacheRepository<JobStateEnti
         persist(jobState)
     }
 
-    @Transactional
     override fun getLastJobState(): JobStateEntity? {
         logger.debug("Search last \"IN PROGRESS\" job state")
         return find("status", "IN_PROGRESS").firstResult()

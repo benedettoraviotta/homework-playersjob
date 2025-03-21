@@ -16,7 +16,17 @@ class JpaPlayerRepository : PanacheRepository<PlayerEntity>, PlayerRepository {
     @Transactional
     override fun save(player: Player) {
         logger.debug("Saving player with id -> {} and name -> {}", player.id, player.name)
-        val entity = PlayerEntity().apply {
+        persist(toJpaEntity(player))
+    }
+
+    override fun findPlayerById(playerId: String): Player? {
+        logger.debug("Search player with id {}", playerId)
+            val entity = find("id", playerId).firstResult<PlayerEntity>()
+            return entity?.let {toCoreDomain(entity)}
+    }
+
+    private fun toJpaEntity(player: Player): PlayerEntity {
+        return PlayerEntity().apply {
             id = player.id
             name = player.name
             position = player.position
@@ -31,30 +41,23 @@ class JpaPlayerRepository : PanacheRepository<PlayerEntity>, PlayerRepository {
             contract = player.contract
             status = player.status
         }
-
-        persistAndFlush(entity)
     }
-
-    @Transactional
-    override fun findPlayerById(playerId: String): Player? {
-        logger.debug("Search player with id {}", playerId)
-            val entity = find("id", playerId).firstResult<PlayerEntity>()
-            return entity?.let {
-                Player(
-                    id = it.id,
-                    name = it.name,
-                    position = it.position,
-                    dateOfBirth = it.dateOfBirth,
-                    age = it.age,
-                    nationality = it.nationality,
-                    marketValue = it.marketValue,
-                    height = it.height,
-                    foot = it.foot,
-                    joinedOn = it.joinedOn,
-                    signedFrom = it.signedFrom,
-                    contract = it.contract,
-                    status = it.status
-                )
-            }
+    
+    private fun toCoreDomain(playerEntity: PlayerEntity): Player {
+        return Player(
+            id = playerEntity.id,
+            name = playerEntity.name,
+            position = playerEntity.position,
+            dateOfBirth = playerEntity.dateOfBirth,
+            age = playerEntity.age,
+            nationality = playerEntity.nationality,
+            marketValue = playerEntity.marketValue,
+            height = playerEntity.height,
+            foot = playerEntity.foot,
+            joinedOn = playerEntity.joinedOn,
+            signedFrom = playerEntity.signedFrom,
+            contract = playerEntity.contract,
+            status = playerEntity.status
+        )
     }
 }

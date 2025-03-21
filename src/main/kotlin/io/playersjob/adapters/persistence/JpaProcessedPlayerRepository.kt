@@ -23,7 +23,6 @@ class JpaProcessedPlayerRepository : ProcessedPlayerRepository, PanacheRepositor
         persist(ProcessedPlayerEntity(playerId = id, jobState = jobState))
     }
 
-    @Transactional
     override fun findByJobState(jobState: JobStateEntity): List<ProcessedPlayerEntity> {
         logger.debug("Search processed player in job state {}", jobState.id)
         return find("jobState", jobState).list()
