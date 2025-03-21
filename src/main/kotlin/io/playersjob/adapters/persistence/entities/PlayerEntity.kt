@@ -1,26 +1,49 @@
 package io.playersjob.adapters.persistence.entities
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase
 import jakarta.persistence.*
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase
 
 @Entity
 @Table(name = "players")
-class JpaPlayerEntity : PanacheEntityBase() {
+class PlayerEntity : PanacheEntityBase() {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var _id: Long = 0
     lateinit var id: String
+
+    @Column(nullable = false)
     lateinit var name: String
+
+    @Column(nullable = false)
     lateinit var position: String
+
+    @Column
     var dateOfBirth: String? = null
+
+    @Column
     var age: Int? = null
+
     @ElementCollection
-    lateinit var nationality: MutableList<String>
+    @CollectionTable(name = "player_nationalities", joinColumns = [JoinColumn(name = "player_id")])
+    @Column(name = "nationality")
+    var nationality: MutableList<String> = mutableListOf()
+
+    @Column
     var height: Int? = null
+
+    @Column
     var foot: String? = null
+
+    @Column
     var joinedOn: String? = null
+
+    @Column
     var signedFrom: String? = null
+
+    @Column
     var contract: String? = null
+
+    @Column
     var marketValue: Int? = null
+
+    @Column
     var status: String? = null
 }

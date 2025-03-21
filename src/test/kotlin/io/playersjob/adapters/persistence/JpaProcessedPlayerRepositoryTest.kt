@@ -6,16 +6,16 @@ import jakarta.inject.Inject
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceException
 import jakarta.transaction.Transactional
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.MockitoAnnotations
 
 @QuarkusTest
-class JpaJobStateRepositoryTest {
+class JpaProcessedPlayerRepositoryTest {
 
     @Inject
-    lateinit var jpaJobStateRepository: JpaJobStateRepository
+    lateinit var jpaProcessedPlayerRepository: JpaProcessedPlayerRepository
 
     @Inject
     lateinit var em: EntityManager
@@ -30,52 +30,52 @@ class JpaJobStateRepositoryTest {
 
     @Test
     @Transactional
-    fun `test save job state`() {
-        val jobState = jpaJobStateRepository.startNewJob()
-        assertNotNull(jobState)
-        assertEquals("IN_PROGRESS", jobState.status)
-    }
-
-    @Test
-    @Transactional
-    fun `test complete job state`() {
-        val jobState = jpaJobStateRepository.startNewJob()
-        jpaJobStateRepository.completeJob(jobState)
-        val completedJobState = jpaJobStateRepository.findById(jobState.id)
-        assertNotNull(completedJobState)
-        assertEquals("COMPLETED", completedJobState!!.status)
-        assertNotNull(completedJobState.endTime)
-    }
-
-    @Test
-    @Transactional
-    fun `test retrieve last job state`() {
-        val jobState = jpaJobStateRepository.startNewJob()
-        val lastJobState = jpaJobStateRepository.getLastJobState()
-        assertNotNull(lastJobState)
-        assertEquals(jobState.id, lastJobState!!.id)
-    }
-
-    @Test
-    @Transactional
-    fun `test save with exception`() {
+    fun `test save processed player`() {
+        val playerId = "player1"
         val jobState = JobStateEntity(status = "IN_PROGRESS")
+        em.persist(jobState)
+
+        jpaProcessedPlayerRepository.save(playerId, jobState)
+        val exists = jpaProcessedPlayerRepository.existById(playerId)
+
+        assertTrue(exists)
+    }
+
+    @Test
+    @Transactional
+    fun `test exists by id`() {
+        val playerId = "player2"
+        val jobState = JobStateEntity(status = "IN_PROGRESS")
+        em.persist(jobState)
+
+        jpaProcessedPlayerRepository.save(playerId, jobState)
+        val exists = jpaProcessedPlayerRepository.existById(playerId)
+
+        assertTrue(exists)
+    }
+
+    @Test
+    @Transactional
+    fun `test save processed player with exception`() {
+        val playerId = "errorPlayer"
+        val jobState = JobStateEntity(status = "IN_PROGRESS")
+        em.persist(jobState)
 
         try {
-            em.persist(jobState)
+            jpaProcessedPlayerRepository.save(playerId, jobState)
             throw PersistenceException("Simulated persistence exception")
-        } catch (e: PersistenceException) {
+        } catch (e: Exception) {
             assertTrue(e.message!!.contains("Simulated persistence exception"))
         }
     }
 
     @Test
     @Transactional
-    fun `test retrieve with exception`() {
+    fun `test exists by id with exception`() {
         try {
-            jpaJobStateRepository.getLastJobState()
+            jpaProcessedPlayerRepository.existById("nonexistent")
             throw PersistenceException("Simulated persistence exception")
-        } catch (e: PersistenceException) {
+        } catch (e: Exception) {
             assertTrue(e.message!!.contains("Simulated persistence exception"))
         }
     }

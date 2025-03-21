@@ -1,9 +1,9 @@
 package io.playersjob.core.ports
 
-import io.playersjob.core.domain.JobState
-import io.smallrye.mutiny.Uni
+import io.playersjob.adapters.persistence.entities.JobStateEntity
 
 interface JobStateRepository {
-    fun save(jobState: JobState): Uni<Void>
-    fun getLastJobState(): Uni<JobState?>
+    fun startNewJob(): JobStateEntity
+    fun completeJob(jobState: JobStateEntity)
+    fun getLastJobState(): JobStateEntity?
 }

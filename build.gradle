@@ -1,9 +1,8 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "1.9.22"
-    id 'org.jetbrains.kotlin.plugin.allopen' version "1.9.22"
-    id 'io.quarkus'
-    id 'org.jetbrains.kotlin.plugin.serialization' version "1.9.22"
-
+    id("org.jetbrains.kotlin.jvm") version "1.9.22"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.9.22"
+    id("io.quarkus")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
 }
 
 repositories {
@@ -13,23 +12,22 @@ repositories {
 
 
 dependencies {
-    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkus:quarkus-kotlin'
-    implementation 'io.quarkus:quarkus-rest-client-reactive'
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation("io.quarkus:quarkus-kotlin")
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json'
-    implementation 'io.quarkus:quarkus-hibernate-reactive-panache'
-    implementation 'io.quarkus:quarkus-jdbc-h2'
-    implementation 'io.quarkus:quarkus-reactive-pg-client'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'io.quarkus:quarkus-smallrye-fault-tolerance'
+    implementation("io.quarkus:quarkus-rest-client")
+    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation ("io.quarkus:quarkus-resteasy-jackson")
 
-    testImplementation 'io.quarkus:quarkus-junit5'
-    testImplementation 'io.quarkus:quarkus-junit5-mockito'
-    testImplementation 'io.rest-assured:rest-assured'
-    testImplementation "org.jetbrains.kotlin:kotlin-test:1.9.22"
-    testImplementation 'io.quarkus:quarkus-hibernate-orm-panache'
-    testImplementation 'io.quarkus:quarkus-jdbc-h2'
-    testImplementation 'io.quarkus:quarkus-test-h2'
+    testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.quarkus:quarkus-junit5-mockito")
+    testImplementation("io.rest-assured:rest-assured")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.22")
+    testImplementation("io.quarkus:quarkus-hibernate-orm-panache")
+    testImplementation("io.quarkus:quarkus-jdbc-h2")
+    testImplementation("io.quarkus:quarkus-test-h2")
 
 }
 
@@ -39,7 +37,7 @@ java {
 }
 
 test {
-    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
 }
 allOpen {
     annotation("jakarta.ws.rs.Path")
@@ -56,4 +54,3 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_21
 }
-
