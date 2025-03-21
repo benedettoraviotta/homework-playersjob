@@ -38,15 +38,16 @@ class FetchClubPlayersJob {
         val players = fetchPlayersFromApi(clubId)
         val playersToProcess = filterPlayersToProcess(players, jobState)
 
-        logger.info("Players to Process: {}", playersToProcess.size)
+        logger.info("Players fetched: {}", players.size)
+        logger.info("Players to process: {}", playersToProcess.size)
 
         playersToProcess.forEach { player ->
-            savePlayer(player)
-            processedPlayerRepository.save(player.id, jobState)
+            savePlayerWithTransaction(player,jobState)
         }
 
-        if (playersToProcess.isEmpty()) {
-            jobStateRepository.completeJob(jobState)
+        val totalProcessedPlayers = processedPlayerRepository.findByJobState(jobState).size
+        if (totalProcessedPlayers >= players.size) {
+            completeJobWithTransaction(jobState)
             logger.info("Player fetch job completed for club ID: {}", clubId)
         } else {
             logger.info("Player fetch job in progress for club ID: {}", clubId)
@@ -71,11 +72,23 @@ class FetchClubPlayersJob {
         return players.filter { it.id !in processedPlayerIds }
     }
 
-    private fun savePlayer(player: Player) {
+    @Transactional
+    fun savePlayerWithTransaction(player: Player, jobState: JobStateEntity) {
         try {
             playerRepository.save(player)
+            processedPlayerRepository.save(player.id, jobState)
         } catch (e: Exception) {
             logger.error("Error during saving of player with id {}", player.id, e)
+            throw e
+        }
+    }
+
+    @Transactional
+    fun completeJobWithTransaction(jobState: JobStateEntity) {
+        try {
+            jobStateRepository.completeJob(jobState)
+        } catch (e: Exception) {
+            logger.error("Error during complete job {}", jobState, e)
             throw e
         }
     }
