@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="fetch-club5-default-force-interruption" type="JarApplication">
+    <option name="JAR_PATH" value="$PROJECT_DIR$/build/quarkus-app/quarkus-run.jar" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <envs>
+      <env name="LOG_LEVEL" value="DEBUG" />
+      <env name="FORCE_INSERT_INTERRUPT" value="yes" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
