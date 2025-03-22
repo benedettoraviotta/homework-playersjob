@@ -7,12 +7,14 @@ import io.playersjob.adapters.persistence.entities.JobStateEntity
 import io.playersjob.adapters.web.exceptions.WebException
 import io.playersjob.adapters.web.transfermarkt.TransfermarktClient
 import io.playersjob.core.domain.Player
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
 import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
@@ -50,13 +52,9 @@ class FetchClubPlayersJobTest {
         return jobStateRepository.startNewJob()
     }
 
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    fun dbInit2Players(players: List<Player>, jobState: JobStateEntity) {
-
-        playerRepository.save(players[0])
-        playerRepository.save(players[1])
-        processedPlayerRepository.save(players[0].id, jobState)
-        processedPlayerRepository.save(players[1].id, jobState)
+    fun addPlayerAndProcessedPlayerToDb(player: Player, jobState: JobStateEntity) {
+        playerRepository.save(player)
+        processedPlayerRepository.save(player.id, jobState)
     }
 
     @Test
@@ -84,14 +82,14 @@ class FetchClubPlayersJobTest {
         `when`(transfermarktClient.getPlayersForClub(clubId)).thenReturn(players)
 
         val jobState = dbStateAlreadyPresent()
-        dbInit2Players(players, jobState)
+        addPlayerAndProcessedPlayerToDb(players[0], jobState)
+        addPlayerAndProcessedPlayerToDb(players[1], jobState)
 
         fetchClubPlayersJob.fetchAndSavePlayers(clubId)
 
         verifyCompleteProcessing(players)
     }
 
-    /*
     @Test
     @Transactional
     fun `test fetchPlayers integration - interruption and resume before first player`() {
@@ -104,7 +102,7 @@ class FetchClubPlayersJobTest {
 
         val jobState = dbStateAlreadyPresent()
 
-        simulateJobInterruption(players, jobState, interruptAfter = 0)
+        simulateJobInterruption(players, jobState, 0)
 
         verifyPartialProcessing(emptyList())
 
@@ -134,7 +132,6 @@ class FetchClubPlayersJobTest {
         verifyCompleteProcessing(players)
     }
 
-
     @Test
     @Transactional
     fun `test fetchPlayers integration - interruption and resume after last player`() {
@@ -146,9 +143,11 @@ class FetchClubPlayersJobTest {
         )
         `when`(transfermarktClient.getPlayersForClub(clubId)).thenReturn(players)
 
-        val jobState = jobStateRepository.startNewJob()
+        val jobState = dbStateAlreadyPresent()
 
         simulateJobInterruption(players, jobState, interruptAfter = players.size)
+
+        verifyPartialProcessing(players)
 
         fetchClubPlayersJob.fetchAndSavePlayers(clubId)
 
@@ -166,7 +165,7 @@ class FetchClubPlayersJobTest {
         )
         `when`(transfermarktClient.getPlayersForClub(clubId)).thenReturn(players)
 
-        val jobState = jobStateRepository.startNewJob()
+        val jobState = dbStateAlreadyPresent()
 
         simulateJobInterruption(players, jobState, interruptAfter = 2)
 
@@ -175,7 +174,7 @@ class FetchClubPlayersJobTest {
         fetchClubPlayersJob.fetchAndSavePlayers(clubId)
 
         verifyCompleteProcessing(players)
-    } */
+    }
 
     @Test
     fun `test fetchPlayers integration - error in retrieve player API`() {
@@ -195,7 +194,7 @@ class FetchClubPlayersJobTest {
     private fun simulateJobInterruption(players: List<Player>, jobState: JobStateEntity, interruptAfter: Int) {
         try {
             for (i in 0 until interruptAfter) {
-                fetchClubPlayersJob.savePlayer(players[i], jobState)
+                addPlayerAndProcessedPlayerToDb(players[i], jobState)
             }
             if (interruptAfter < players.size) {
                 throw RuntimeException("Simulated job interruption")
@@ -205,10 +204,32 @@ class FetchClubPlayersJobTest {
         }
     }
 
-    private fun verifyPartialProcessing(players: List<Player>) {
+    private fun <T> flushAndClear(repository: T) {
+        val entityManager = (repository as PanacheRepository<*>).getEntityManager()
+        entityManager.flush()
+        entityManager.clear()
+    }
+
+    private fun verifyPlayers(players: List<Player>) {
         val savedPlayers = playerRepository.findAll().list()
+        val savedPlayerIds = savedPlayers.map { it.id }.toSet()
+
         assertEquals(players.size, savedPlayers.size)
-        assertEquals(players.map { it.id }, savedPlayers.map { it.id })
+        assertTrue(savedPlayerIds.containsAll(players.map { it.id }))
+
+        val processedPlayers = processedPlayerRepository.findAll().list()
+        val processedPlayerIds = processedPlayers.map { it.playerId }.toSet()
+
+        assertEquals(players.size, processedPlayers.size)
+        assertTrue(processedPlayerIds.containsAll(players.map { it.id }))
+    }
+
+    private fun verifyPartialProcessing(players: List<Player>) {
+        flushAndClear(playerRepository)
+        flushAndClear(processedPlayerRepository)
+        flushAndClear(jobStateRepository)
+
+        verifyPlayers(players)
 
         val jobStates = jobStateRepository.findAll().list()
         assertEquals(1, jobStates.size)
@@ -216,16 +237,18 @@ class FetchClubPlayersJobTest {
     }
 
     private fun verifyCompleteProcessing(players: List<Player>) {
-        val savedPlayers = playerRepository.findAll().list()
-        assertEquals(players.size, savedPlayers.size)
-        assertEquals(players.map { it.id }, savedPlayers.map { it.id })
+        flushAndClear(playerRepository)
+        flushAndClear(processedPlayerRepository)
+        flushAndClear(jobStateRepository)
 
-        val processedPlayers = processedPlayerRepository.findAll().list()
-        assertEquals(players.size, processedPlayers.size)
-        assertEquals(players.map { it.id }, processedPlayers.map { it.playerId })
+        verifyPlayers(players)
 
         val jobStates = jobStateRepository.findAll().list()
         assertEquals(1, jobStates.size)
         assertEquals("COMPLETED", jobStates[0].status)
     }
+
+
+
+
 }
