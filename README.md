@@ -1,8 +1,36 @@
 # io.playersjob
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Run configuration
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+The jar application can have the following environment variables set:
+
+  - CLUB_ID : This variable specifies the club ID for the job. If CLUB_ID is not provided, it defaults to 5.
+  - FORCE_INSERT_INTERRUPT=[yes|no]: This variable controls whether an interruption is forced. It is set to no by default, meaning no interruption is simulated unless explicitly set otherwise.
+
+In the .run folder, there are two IntelliJ run configurations to run the jar application:
+  - *fetch-club5-default.run*: This is the standard run configuration that starts the application normally without simulating any interruption.
+
+  - *fetch-club5-default-force-interruption.run*: This configuration simulates an interruption during the job execution, for testing how the system behaves in case of an interruption.
+## Postgresql container
+Used to store players retrieve from transfermark api and for job state.
+
+Run
+```shell script
+ docker-compose -f src/main/resources/docker-compose-postgresql17.yml up -d
+```
+to create an instance of postgre17 and initialize the db.
+
+### Interact with db 
+From container bash 
+```shell script
+ docker exec -it resources-postgres-1 bash
+```
+use
+```shell script
+ psql -U myuser -d playersdb
+```
+
+
 
 ## Running the application in dev mode
 
