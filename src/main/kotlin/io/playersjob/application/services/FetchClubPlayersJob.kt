@@ -10,6 +10,7 @@ import io.playersjob.core.domain.Player
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import jakarta.transaction.Transactional.TxType
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
@@ -27,30 +28,43 @@ class FetchClubPlayersJob {
     @Inject
     lateinit var processedPlayerRepository: JpaProcessedPlayerRepository
 
+    @Inject
+    lateinit var insertInterruptionSimulator: InsertInterruptionSimulator
+
     private val logger = LoggerFactory.getLogger(FetchClubPlayersJob::class.java)
 
     @Transactional
     fun fetchAndSavePlayers(clubId: Int) {
         logger.info("Starting player fetch job for club ID: {}", clubId)
 
-        val jobState = jobStateRepository.getLastJobState() ?: jobStateRepository.startNewJob()
-
-        val players = fetchPlayersFromApi(clubId)
-        val playersToProcess = filterPlayersToProcess(players, jobState)
-
-        logger.info("Players fetched: {}", players.size)
-        logger.info("Players to process: {}", playersToProcess.size)
-
-        playersToProcess.forEach { player ->
-            savePlayerWithTransaction(player,jobState)
+        val players = try {
+            fetchPlayersFromApi(clubId)
+        } catch (e: Exception) {
+            logger.error("Exception during fetch players operation: {}", e.message, e)
+            throw e
         }
 
-        val totalProcessedPlayers = processedPlayerRepository.findByJobState(jobState).size
-        if (totalProcessedPlayers >= players.size) {
-            completeJobWithTransaction(jobState)
-            logger.info("Player fetch job completed for club ID: {}", clubId)
-        } else {
-            logger.info("Player fetch job in progress for club ID: {}", clubId)
+        try {
+            val jobState = getOrCreateJobState()
+            val playersToProcess = filterPlayersToProcess(players, jobState)
+
+            logger.info("Players fetched: {}", players.size)
+            logger.info("Players to process: {}", playersToProcess.size)
+
+            playersToProcess.forEach { player ->
+                savePlayer(player, jobState)
+            }
+
+            val totalProcessedPlayers = processedPlayerRepository.findByJobState(jobState).size
+            if (totalProcessedPlayers >= players.size) {
+                updateJobState(jobState, "COMPLETED")
+                logger.info("Player fetch job completed for club ID: {}", clubId)
+            } else {
+                logger.info("Player fetch job in progress for club ID: {}", clubId)
+            }
+        } catch (e: Exception) {
+            logger.error("Exception during fetchAndSavePlayers: {}", e.message, e)
+            throw e
         }
     }
 
@@ -72,8 +86,23 @@ class FetchClubPlayersJob {
         return players.filter { it.id !in processedPlayerIds }
     }
 
-    @Transactional
-    fun savePlayerWithTransaction(player: Player, jobState: JobStateEntity) {
+    @Transactional(TxType.REQUIRES_NEW)
+    fun getOrCreateJobState(): JobStateEntity {
+        return try {
+            val lastJobState = jobStateRepository.getLastJobState()
+            if (lastJobState != null && lastJobState.status == "IN_PROGRESS") {
+                lastJobState
+            } else {
+                jobStateRepository.startNewJob()
+            }
+        } catch (e: Exception) {
+            logger.error("Error during get job state", e)
+            throw e
+        }
+    }
+
+    @Transactional(TxType.REQUIRES_NEW)
+    fun savePlayer(player: Player, jobState: JobStateEntity) {
         try {
             val existingPlayer = playerRepository.findPlayerById(player.id)
             if (existingPlayer == null) {
@@ -82,18 +111,28 @@ class FetchClubPlayersJob {
                 logger.debug("Player {} already exists, skipping insert", player.id)
             }
             processedPlayerRepository.save(player.id, jobState)
+
+            // SIMULO INTERRUZIONE
+            val processedCount = processedPlayerRepository.findByJobState(jobState).size
+            insertInterruptionSimulator.checkForInterruption(processedCount)
+
         } catch (e: Exception) {
             logger.error("Error during saving of player with id {}", player.id, e)
             throw e
         }
     }
 
-    @Transactional
-    fun completeJobWithTransaction(jobState: JobStateEntity) {
+    @Transactional(TxType.REQUIRES_NEW)
+    fun updateJobState(jobState: JobStateEntity, newStatus: String) {
         try {
-            jobStateRepository.completeJob(jobState)
+            val attachedJobState =
+                jobStateRepository.findById(jobState.id)
+                    ?: throw IllegalArgumentException("Job state with ${jobState.id} not found")
+            attachedJobState.status = newStatus
+            jobStateRepository.persistAndFlush(attachedJobState)
+            logger.info("Job {} updated to status: {}", attachedJobState.id, newStatus)
         } catch (e: Exception) {
-            logger.error("Error during complete job {}", jobState, e)
+            logger.error("Error during updating job {} to status: {}", jobState, newStatus, e)
             throw e
         }
     }

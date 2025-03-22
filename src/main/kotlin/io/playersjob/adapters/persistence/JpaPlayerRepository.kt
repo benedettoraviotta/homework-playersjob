@@ -5,7 +5,6 @@ import io.playersjob.core.domain.Player
 import io.playersjob.core.ports.PlayerRepository
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 
 @ApplicationScoped
@@ -13,13 +12,11 @@ class JpaPlayerRepository : PanacheRepository<PlayerEntity>, PlayerRepository {
 
     private val logger = LoggerFactory.getLogger(JpaPlayerRepository::class.java)
 
-    @Transactional
     override fun save(player: Player) {
         logger.debug("Saving player with id -> {} and name -> {}", player.id, player.name)
-        persist(toJpaEntity(player))
+        persistAndFlush(toJpaEntity(player))
     }
 
-    @Transactional
     override fun findPlayerById(playerId: String): Player? {
         logger.debug("Search player with id {}", playerId)
             val entity = find("id", playerId).firstResult()

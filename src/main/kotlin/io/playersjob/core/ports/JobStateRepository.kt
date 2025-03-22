@@ -4,6 +4,6 @@ import io.playersjob.adapters.persistence.entities.JobStateEntity
 
 interface JobStateRepository {
     fun startNewJob(): JobStateEntity
-    fun completeJob(jobState: JobStateEntity)
+    fun setJobState(jobState: JobStateEntity, jobStatus: String)
     fun getLastJobState(): JobStateEntity?
 }

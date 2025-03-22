@@ -17,10 +17,9 @@ class JpaProcessedPlayerRepository : ProcessedPlayerRepository, PanacheRepositor
         return find("playerId", id).firstResult() != null
     }
 
-    @Transactional
     override fun save(id: String, jobState: JobStateEntity) {
         logger.debug("Saving processed player with id -> {} in job -> {}", id, jobState.id)
-        persist(ProcessedPlayerEntity(playerId = id, jobState = jobState))
+        persistAndFlush(ProcessedPlayerEntity(playerId = id, jobState = jobState))
     }
 
     override fun findByJobState(jobState: JobStateEntity): List<ProcessedPlayerEntity> {

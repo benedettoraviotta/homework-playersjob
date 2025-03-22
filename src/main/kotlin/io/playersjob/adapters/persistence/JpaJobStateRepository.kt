@@ -4,7 +4,6 @@ import io.playersjob.adapters.persistence.entities.JobStateEntity
 import io.playersjob.core.ports.JobStateRepository
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
 import jakarta.enterprise.context.ApplicationScoped
-import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -13,24 +12,22 @@ class JpaJobStateRepository : JobStateRepository, PanacheRepository<JobStateEnti
 
     private val logger = LoggerFactory.getLogger(JpaJobStateRepository::class.java)
 
-    @Transactional
     override fun startNewJob(): JobStateEntity {
-        val jobState = JobStateEntity(status = "IN_PROGRESS")
-        persist(jobState)
+        val jobState = JobStateEntity()
+        setJobState(jobState, "IN_PROGRESS")
         logger.debug("Create new job with id {}", jobState.id)
         return jobState
     }
 
-    @Transactional
-    override fun completeJob(jobState: JobStateEntity) {
-        logger.debug("Set job {} to COMPLETED", jobState.id)
-        jobState.status = "COMPLETED"
+    override fun setJobState(jobState: JobStateEntity, jobStatus: String) {
+        jobState.status = jobStatus
         jobState.endTime = LocalDateTime.now()
-        persist(jobState)
+        persistAndFlush(jobState)
+        logger.debug("Set job {} to {}", jobState.id, jobStatus)
     }
 
     override fun getLastJobState(): JobStateEntity? {
         logger.debug("Search last \"IN PROGRESS\" job state")
-        return find("status", "IN_PROGRESS").firstResult()
+        return find("status = ?1 ORDER BY startTime DESC", "IN_PROGRESS").firstResult()
     }
 }

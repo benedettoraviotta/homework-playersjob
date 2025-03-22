@@ -40,7 +40,7 @@ class JpaJobStateRepositoryTest {
     @Transactional
     fun `test complete job state`() {
         val jobState = jpaJobStateRepository.startNewJob()
-        jpaJobStateRepository.completeJob(jobState)
+        jpaJobStateRepository.setJobState(jobState, "COMPLETED")
         val completedJobState = jpaJobStateRepository.findById(jobState.id)
         assertNotNull(completedJobState)
         assertEquals("COMPLETED", completedJobState!!.status)
