@@ -65,11 +65,11 @@ class FetchClubPlayersJobTest {
         assertEquals(2, savedPlayers.size)
         assertEquals(players.map { it.id }, savedPlayers.map { it.id })
 
-        val processedPlayers = processedPlayerRepository.findAll().list<ProcessedPlayerEntity>()
+        val processedPlayers = processedPlayerRepository.findAll().list()
         assertEquals(2, processedPlayers.size)
         assertEquals(players.map { it.id }, processedPlayers.map { it.playerId })
 
-        val jobState = jobStateRepository.findAll().list<JobStateEntity>()
+        val jobState = jobStateRepository.findAll().list()
         assertEquals(1, jobState.size)
         assertEquals("COMPLETED", jobState[0].status)
     }
@@ -97,11 +97,11 @@ class FetchClubPlayersJobTest {
         assertEquals(3, savedPlayers.size)
         assertEquals(players.map { it.id }, savedPlayers.map { it.id })
 
-        val processedPlayers = processedPlayerRepository.findAll().list<ProcessedPlayerEntity>()
+        val processedPlayers = processedPlayerRepository.findAll().list()
         assertEquals(3, processedPlayers.size)
         assertEquals(players.map { it.id }, processedPlayers.map { it.playerId })
 
-        val jobStates = jobStateRepository.findAll().list<JobStateEntity>()
+        val jobStates = jobStateRepository.findAll().list()
         assertEquals(1, jobStates.size)
         assertEquals("COMPLETED", jobStates[0].status)
     }
@@ -205,9 +205,9 @@ class FetchClubPlayersJobTest {
 
         assertEquals("API error", exception.message)
 
-        assertEquals(0, playerRepository.findAll().list<PlayerEntity>().size)
-        assertEquals(0, processedPlayerRepository.findAll().list<ProcessedPlayerEntity>().size)
-        assertEquals(1, jobStateRepository.findAll().list<JobStateEntity>().size)
+        assertEquals(0, playerRepository.findAll().list().size)
+        assertEquals(0, processedPlayerRepository.findAll().list().size)
+        assertEquals(1, jobStateRepository.findAll().list().size)
     }
 
     private fun simulateJobInterruption(players: List<Player>, jobState: JobStateEntity, interruptAfter: Int) {
@@ -228,7 +228,7 @@ class FetchClubPlayersJobTest {
         assertEquals(players.size, savedPlayers.size)
         assertEquals(players.map { it.id }, savedPlayers.map { it.id })
 
-        val jobStates = jobStateRepository.findAll().list<JobStateEntity>()
+        val jobStates = jobStateRepository.findAll().list()
         assertEquals(1, jobStates.size)
         assertEquals("IN_PROGRESS", jobStates[0].status)
     }
@@ -238,11 +238,11 @@ class FetchClubPlayersJobTest {
         assertEquals(players.size, savedPlayers.size)
         assertEquals(players.map { it.id }, savedPlayers.map { it.id })
 
-        val processedPlayers = processedPlayerRepository.findAll().list<ProcessedPlayerEntity>()
+        val processedPlayers = processedPlayerRepository.findAll().list()
         assertEquals(players.size, processedPlayers.size)
         assertEquals(players.map { it.id }, processedPlayers.map { it.playerId })
 
-        val jobStates = jobStateRepository.findAll().list<JobStateEntity>()
+        val jobStates = jobStateRepository.findAll().list()
         assertEquals(1, jobStates.size)
         assertEquals("COMPLETED", jobStates[0].status)
     }

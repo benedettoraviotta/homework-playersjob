@@ -1,5 +1,6 @@
 package io.playersjob.adapters.web.transfermarkt
 
+import io.playersjob.adapters.dto.TransfermarktPlayer
 import io.playersjob.adapters.web.exceptions.NetworkException
 import io.playersjob.adapters.web.exceptions.ServerException
 import io.playersjob.adapters.web.exceptions.ValidationException
@@ -22,21 +23,7 @@ class TransfermarktClient @Inject constructor(
     override fun getPlayersForClub(clubId: Int): List<Player> {
         try {
             val transfermarktPlayers = restClient.getPlayers(clubId).players
-            return transfermarktPlayers.map {
-                Player(
-                    id = it.id,
-                    name = it.name,
-                    position = it.position,
-                    dateOfBirth = it.dateOfBirth,
-                    age = it.age,
-                    nationality = it.nationality,
-                    height = it.height,
-                    foot = it.foot,
-                    joinedOn = it.joinedOn,
-                    signedFrom = it.signedFrom,
-                    contract = it.contract, it.marketValue, it.status
-                )
-            }
+            return toCoreDomain(transfermarktPlayers)
         } catch (e: ProcessingException) {
             logger.error("Network error", e)
             throw NetworkException("Network error occurred while fetching players")
@@ -53,6 +40,24 @@ class TransfermarktClient @Inject constructor(
         } catch (e: Exception) {
             logger.error("Generic error", e)
             throw e
+        }
+    }
+
+    private fun toCoreDomain(players: List<TransfermarktPlayer>): List<Player> {
+        return players.map {
+            Player(
+                id = it.id,
+                name = it.name,
+                position = it.position,
+                dateOfBirth = it.dateOfBirth,
+                age = it.age,
+                nationality = it.nationality,
+                height = it.height,
+                foot = it.foot,
+                joinedOn = it.joinedOn,
+                signedFrom = it.signedFrom,
+                contract = it.contract, it.marketValue, it.status
+            )
         }
     }
 }

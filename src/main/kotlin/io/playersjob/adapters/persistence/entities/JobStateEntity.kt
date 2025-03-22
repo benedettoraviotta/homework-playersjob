@@ -1,12 +1,11 @@
 package io.playersjob.adapters.persistence.entities
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "job_state")
-class JobStateEntity() : PanacheEntityBase() {
+class JobStateEntity() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

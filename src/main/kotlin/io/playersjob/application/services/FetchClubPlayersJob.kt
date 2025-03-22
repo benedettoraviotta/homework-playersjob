@@ -30,7 +30,7 @@ class FetchClubPlayersJob {
     private val logger = LoggerFactory.getLogger(FetchClubPlayersJob::class.java)
 
     @Transactional
-    fun fetchAndSavePlayers(clubId: Int = 5) {
+    fun fetchAndSavePlayers(clubId: Int) {
         logger.info("Starting player fetch job for club ID: {}", clubId)
 
         val jobState = jobStateRepository.getLastJobState() ?: jobStateRepository.startNewJob()
@@ -75,7 +75,12 @@ class FetchClubPlayersJob {
     @Transactional
     fun savePlayerWithTransaction(player: Player, jobState: JobStateEntity) {
         try {
-            playerRepository.save(player)
+            val existingPlayer = playerRepository.findPlayerById(player.id)
+            if (existingPlayer == null) {
+                playerRepository.save(player)
+            } else {
+                logger.debug("Player {} already exists, skipping insert", player.id)
+            }
             processedPlayerRepository.save(player.id, jobState)
         } catch (e: Exception) {
             logger.error("Error during saving of player with id {}", player.id, e)

@@ -1,11 +1,10 @@
 package io.playersjob.adapters.persistence.entities
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase
 import jakarta.persistence.*
 
 @Entity
 @Table(name = "players")
-class PlayerEntity : PanacheEntityBase() {
+class PlayerEntity{
     @Id
     lateinit var id: String
 

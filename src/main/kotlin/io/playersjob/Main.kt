@@ -17,7 +17,6 @@ class Main : QuarkusApplication {
     @ConfigProperty(name = "fetch.job.club.id", defaultValue = "5")
     lateinit var clubId: Integer
 
-    @Transactional
     override fun run(vararg args: String?): Int {
         try {
             fetchJobRunner.fetchAndSavePlayers(clubId.toInt())

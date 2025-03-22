@@ -3,7 +3,7 @@ package io.playersjob.adapters.persistence
 import io.playersjob.adapters.persistence.entities.PlayerEntity
 import io.playersjob.core.domain.Player
 import io.playersjob.core.ports.PlayerRepository
-import io.quarkus.hibernate.orm.panache.PanacheRepository
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -19,9 +19,10 @@ class JpaPlayerRepository : PanacheRepository<PlayerEntity>, PlayerRepository {
         persist(toJpaEntity(player))
     }
 
+    @Transactional
     override fun findPlayerById(playerId: String): Player? {
         logger.debug("Search player with id {}", playerId)
-            val entity = find("id", playerId).firstResult<PlayerEntity>()
+            val entity = find("id", playerId).firstResult()
             return entity?.let {toCoreDomain(entity)}
     }
 

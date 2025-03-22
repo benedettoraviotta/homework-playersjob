@@ -19,7 +19,7 @@ dependencies {
     implementation("io.quarkus:quarkus-kotlin")
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json'
     implementation("io.quarkus:quarkus-rest-client")
-    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-hibernate-orm-panache-kotlin")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation ("io.quarkus:quarkus-resteasy-jackson")

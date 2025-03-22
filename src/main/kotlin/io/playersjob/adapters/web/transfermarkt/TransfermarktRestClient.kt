@@ -1,6 +1,5 @@
 package io.playersjob.adapters.web.transfermarkt
 
-import io.playersjob.adapters.dto.TransfermarktPlayer
 import io.playersjob.adapters.dto.TransfermarktResponse
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path

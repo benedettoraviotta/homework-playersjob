@@ -3,7 +3,7 @@ package io.playersjob.adapters.persistence
 import io.playersjob.adapters.persistence.entities.ProcessedPlayerEntity
 import io.playersjob.adapters.persistence.entities.JobStateEntity
 import io.playersjob.core.ports.ProcessedPlayerRepository
-import io.quarkus.hibernate.orm.panache.PanacheRepository
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -14,7 +14,7 @@ class JpaProcessedPlayerRepository : ProcessedPlayerRepository, PanacheRepositor
 
     override fun existById(id: String): Boolean {
         logger.debug("Verify if player with id {} was processed", id)
-        return find("playerId", id).firstResult<ProcessedPlayerEntity>() != null
+        return find("playerId", id).firstResult() != null
     }
 
     @Transactional

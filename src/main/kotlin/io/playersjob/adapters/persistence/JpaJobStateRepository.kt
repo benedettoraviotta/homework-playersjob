@@ -2,7 +2,7 @@ package io.playersjob.adapters.persistence
 
 import io.playersjob.adapters.persistence.entities.JobStateEntity
 import io.playersjob.core.ports.JobStateRepository
-import io.quarkus.hibernate.orm.panache.PanacheRepository
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
